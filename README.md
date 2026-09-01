@@ -106,10 +106,15 @@ Before creating a release, verify the installation from a clean copy:
 ```bash
 npm ci
 npm run build
+npm test
 npm run inspector
 ```
 
-If you publish it as an npm package, `npm publish` builds the project automatically and only distributes `dist`, `README.md`, and `.env.example`.
+If you publish it as an npm package, `npm publish` builds the project automatically and only distributes `dist`, `README.md`, `.env.example`, and `LICENSE`.
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
 ## How to get a SteamID64
 
@@ -117,6 +122,4 @@ Most tools expect a 64-bit `steamid` (for example, `76561197960435530`) rather t
 
 ## Possible next steps
 
-- Add automated tests for tool registration and responses.
 - Cache responses because Steam has rate limits.
-- Add a license to the repository if you want to allow reuse.
