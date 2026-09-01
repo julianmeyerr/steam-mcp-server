@@ -1,8 +1,11 @@
 {
-  "name": "steam-mcp-server",
-  "version": "1.1.0",
+  "name": "@j.meyer/steam-mcp-server",
+  "version": "1.1.1",
   "description": "MCP server that exposes the Steam Web API (profiles, games, achievements, friends, and news) as tools for LLMs",
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "main": "dist/index.js",
   "files": [
@@ -12,7 +15,7 @@
     "LICENSE"
   ],
   "bin": {
-    "steam-mcp-server": "./dist/index.js"
+    "steam-mcp-server": "dist/index.js"
   },
   "scripts": {
     "build": "tsc",
