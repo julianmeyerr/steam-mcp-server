@@ -106,6 +106,7 @@ Before creating a release, verify the installation from a clean copy:
 ```bash
 npm ci
 npm run build
+npm test
 npm run inspector
 ```
 
@@ -121,5 +122,4 @@ Most tools expect a 64-bit `steamid` (for example, `76561197960435530`) rather t
 
 ## Possible next steps
 
-- Add automated tests for tool registration and responses.
 - Cache responses because Steam has rate limits.
