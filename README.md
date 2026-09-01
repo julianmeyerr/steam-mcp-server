@@ -77,8 +77,8 @@ Add the server using the absolute path to your project:
 {
   "mcpServers": {
     "steam": {
-      "command": "node",
-      "args": ["/absolute/path/to/steam-mcp-server/dist/index.js"],
+      "command": "npx",
+      "args": ["-y", "@j.meyer/steam-mcp-server"],
       "env": {
         "STEAM_API_KEY": "your_api_key_here"
       }
@@ -92,7 +92,7 @@ Restart Claude Desktop. The `steam` server should appear in the tools menu.
 ## 5. Connect to Claude Code
 
 ```bash
-claude mcp add steam -- node /absolute/path/to/steam-mcp-server/dist/index.js
+claude mcp add steam -- npx -y @j.meyer/steam-mcp-server
 ```
 
 Claude Code inherits `STEAM_API_KEY` if it is defined in your `.env` file or in the shell environment where you run `claude`.
@@ -111,6 +111,7 @@ npm run inspector
 ```
 
 If you publish it as an npm package, `npm publish` builds the project automatically and only distributes `dist`, `README.md`, `.env.example`, and `LICENSE`.
+The package is available as `@j.meyer/steam-mcp-server`.
 
 ## License
 
