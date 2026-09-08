@@ -63,6 +63,12 @@ npm run inspector
 
 This opens a browser UI where you can list and execute the tools manually to verify that they respond correctly.
 
+To test the published npm package instead of the local build:
+
+```powershell
+npx --yes "@modelcontextprotocol/inspector" npx --yes --package "@j.meyer/steam-mcp-server@1.1.2" steam-mcp-server
+```
+
 ## 4. Connect to Claude Desktop
 
 Edit the Claude Desktop configuration file:
@@ -78,7 +84,12 @@ Add the server using the absolute path to your project:
   "mcpServers": {
     "steam": {
       "command": "npx",
-      "args": ["-y", "@j.meyer/steam-mcp-server"],
+      "args": [
+        "--yes",
+        "--package",
+        "@j.meyer/steam-mcp-server@1.1.2",
+        "steam-mcp-server"
+      ],
       "env": {
         "STEAM_API_KEY": "your_api_key_here"
       }
@@ -92,7 +103,7 @@ Restart Claude Desktop. The `steam` server should appear in the tools menu.
 ## 5. Connect to Claude Code
 
 ```bash
-claude mcp add steam -- npx -y @j.meyer/steam-mcp-server
+claude mcp add steam -- npx --yes --package @j.meyer/steam-mcp-server@1.1.2 steam-mcp-server
 ```
 
 Claude Code inherits `STEAM_API_KEY` if it is defined in your `.env` file or in the shell environment where you run `claude`.
