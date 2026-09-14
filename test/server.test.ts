@@ -27,7 +27,7 @@ const expectedToolNames = [
 async function createConnectedPair() {
   const server = new McpServer({
     name: "steam-mcp-server",
-    version: "1.1.5",
+    version: "1.1.6",
   });
   registerSteamTools(server);
 
