@@ -23,6 +23,7 @@ MCP server that exposes the [Steam Web API](https://developer.valvesoftware.com/
 | `get_player_bans` | VAC, community, economy, and game ban status |
 
 The Steam profile being queried must be public, except when querying your own SteamID with your own API key.
+An API key is required for account-related tools; public tools such as current player counts and game search can run without one.
 
 ## 1. Get a Steam API key
 
@@ -41,6 +42,8 @@ npm run build
 ```
 
 The `.env` file contains secrets and must not be published. If your network uses SSL inspection, set `STEAM_EXTRA_CA` to the path of your private CA certificate. Use `STEAM_TLS_INSECURE=1` only as a last resort on a trusted network.
+
+Steam responses are cached in memory for 30 seconds by default, and requests are spaced by at least 100 milliseconds to reduce rate-limit errors. Configure `STEAM_CACHE_TTL_MS=0` to disable caching or adjust `STEAM_MIN_REQUEST_INTERVAL_MS` if needed.
 
 ### Family library
 
@@ -66,7 +69,7 @@ This opens a browser UI where you can list and execute the tools manually to ver
 To test the published npm package instead of the local build:
 
 ```powershell
-npx --yes "@modelcontextprotocol/inspector" npx --yes --package "@j.meyer/steam-mcp-server@1.1.4" steam-mcp-server
+npx --yes "@modelcontextprotocol/inspector" npx --yes --package "@j.meyer/steam-mcp-server@1.1.5" steam-mcp-server
 ```
 
 ## 4. Connect to Claude Desktop
@@ -87,7 +90,7 @@ Add the server using the absolute path to your project:
       "args": [
         "--yes",
         "--package",
-        "@j.meyer/steam-mcp-server@1.1.4",
+        "@j.meyer/steam-mcp-server@1.1.5",
         "steam-mcp-server"
       ],
       "env": {
@@ -103,7 +106,7 @@ Restart Claude Desktop. The `steam` server should appear in the tools menu.
 ## 5. Connect to Claude Code
 
 ```bash
-claude mcp add steam -- npx --yes --package @j.meyer/steam-mcp-server@1.1.4 steam-mcp-server
+claude mcp add steam -- npx --yes --package @j.meyer/steam-mcp-server@1.1.5 steam-mcp-server
 ```
 
 Claude Code inherits `STEAM_API_KEY` if it is defined in your `.env` file or in the shell environment where you run `claude`.
@@ -139,7 +142,7 @@ The workflow uses npm Trusted Publishing with GitHub OIDC, so no `NPM_TOKEN` sec
 After merging the version bump into `main`, push its matching tag:
 
 ```bash
-git push origin v1.1.4
+git push origin v1.1.5
 ```
 
 ## License
@@ -152,4 +155,4 @@ Most tools expect a 64-bit `steamid` (for example, `76561197960435530`) rather t
 
 ## Possible next steps
 
-- Cache responses because Steam has rate limits.
+- Add more Steam Store tools, such as reviews, prices, and game details.
