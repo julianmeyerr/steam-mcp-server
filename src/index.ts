@@ -27,7 +27,7 @@ async function main() {
 
   const server = new McpServer({
     name: "steam-mcp-server",
-    version: "1.1.2",
+    version: "1.1.3",
   });
 
   registerSteamTools(server);
