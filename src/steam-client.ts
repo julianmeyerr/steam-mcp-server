@@ -6,6 +6,33 @@ import axios, { AxiosError } from "axios";
 
 const STEAM_API_BASE_URL = "https://api.steampowered.com";
 
+type RequestParams = Record<string, string | number | boolean | undefined>;
+
+const DEFAULT_CACHE_TTL_MS = 30_000;
+const DEFAULT_MIN_REQUEST_INTERVAL_MS = 100;
+const MAX_CACHE_ENTRIES = 100;
+
+type CacheEntry = {
+  expiresAt: number;
+  value: unknown;
+};
+
+const responseCache = new Map<string, CacheEntry>();
+const inFlightRequests = new Map<string, Promise<unknown>>();
+let requestQueue = Promise.resolve();
+let lastRequestAt = 0;
+
+function readMilliseconds(name: string, fallback: number): number {
+  const value = Number(process.env[name]);
+  return Number.isFinite(value) && value >= 0 ? value : fallback;
+}
+
+const cacheTtlMs = readMilliseconds("STEAM_CACHE_TTL_MS", DEFAULT_CACHE_TTL_MS);
+const minRequestIntervalMs = readMilliseconds(
+  "STEAM_MIN_REQUEST_INTERVAL_MS",
+  DEFAULT_MIN_REQUEST_INTERVAL_MS
+);
+
 /**
  * Construye la lista de CAs de confianza para axios.
  *
@@ -47,29 +74,111 @@ const httpsAgent = new https.Agent({
 
 const STEAM_STORE_BASE_URL = "https://store.steampowered.com";
 
+function cleanParams(params: RequestParams): Record<string, string | number | boolean> {
+  const result: Record<string, string | number | boolean> = {};
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined) result[key] = value;
+  }
+  return result;
+}
+
+function getCacheKey(
+  namespace: string,
+  interfacePath: string,
+  params: Record<string, string | number | boolean>
+): string {
+  return JSON.stringify([
+    namespace,
+    interfacePath,
+    Object.entries(params).sort(([a], [b]) => a.localeCompare(b)),
+  ]);
+}
+
+function scheduleRequest<T>(request: () => Promise<T>): Promise<T> {
+  const requestStart = requestQueue.then(async () => {
+    const elapsed = Date.now() - lastRequestAt;
+    const waitMs = Math.max(0, minRequestIntervalMs - elapsed);
+    if (waitMs > 0) {
+      await new Promise((resolve) => setTimeout(resolve, waitMs));
+    }
+    lastRequestAt = Date.now();
+  });
+
+  requestQueue = requestStart.then(
+    () => undefined,
+    () => undefined
+  );
+  return requestStart.then(request);
+}
+
+async function request<T>(
+  baseUrl: string,
+  interfacePath: string,
+  params: RequestParams,
+  cacheNamespace: string,
+  cacheParams: RequestParams = params
+): Promise<T> {
+  const cleanRequestParams = cleanParams(params);
+  const cacheKey = getCacheKey(cacheNamespace, interfacePath, cleanParams(cacheParams));
+
+  if (cacheTtlMs > 0) {
+    const cached = responseCache.get(cacheKey);
+    if (cached) {
+      if (cached.expiresAt > Date.now()) {
+        return cached.value as T;
+      }
+      responseCache.delete(cacheKey);
+    }
+  }
+
+  const existingRequest = inFlightRequests.get(cacheKey);
+  if (existingRequest) return existingRequest as Promise<T>;
+
+  const pendingRequest = (async () => {
+    try {
+      const response = await scheduleRequest(() =>
+        axios.get(`${baseUrl}/${interfacePath}`, {
+          params: cleanRequestParams,
+          timeout: 15000,
+          httpsAgent,
+        })
+      );
+      const data = response.data as T;
+
+      if (cacheTtlMs > 0) {
+        if (responseCache.size >= MAX_CACHE_ENTRIES) {
+          const oldestKey = responseCache.keys().next().value;
+          if (oldestKey) responseCache.delete(oldestKey);
+        }
+        responseCache.set(cacheKey, {
+          expiresAt: Date.now() + cacheTtlMs,
+          value: data,
+        });
+      }
+
+      return data;
+    } catch (error) {
+      throw new Error(formatSteamError(error));
+    }
+  })();
+
+  inFlightRequests.set(cacheKey, pendingRequest);
+  try {
+    return await pendingRequest;
+  } finally {
+    inFlightRequests.delete(cacheKey);
+  }
+}
+
 /**
  * Llama a la API de la tienda de Steam (store.steampowered.com), que no requiere
  * API key. Útil para búsquedas por nombre (p. ej. storesearch).
  */
 export async function steamStoreRequest<T>(
   path: string,
-  params: Record<string, string | number | boolean | undefined>
+  params: RequestParams
 ): Promise<T> {
-  const cleanParams: Record<string, string | number | boolean> = {};
-  for (const [k, v] of Object.entries(params)) {
-    if (v !== undefined) cleanParams[k] = v;
-  }
-
-  try {
-    const response = await axios.get(`${STEAM_STORE_BASE_URL}/${path}`, {
-      params: cleanParams,
-      timeout: 15000,
-      httpsAgent,
-    });
-    return response.data as T;
-  } catch (error) {
-    throw new Error(formatSteamError(error));
-  }
+  return request<T>(STEAM_STORE_BASE_URL, path, params, "store");
 }
 
 
@@ -80,7 +189,7 @@ export async function steamStoreRequest<T>(
  */
 export async function steamRequest<T>(
   interfacePath: string,
-  params: Record<string, string | number | boolean | undefined>
+  params: RequestParams
 ): Promise<T> {
   const apiKey = process.env.STEAM_API_KEY;
   if (!apiKey) {
@@ -89,25 +198,31 @@ export async function steamRequest<T>(
     );
   }
 
-  // Steam descarta los params undefined, así que los filtramos antes de armar el request
-  const cleanParams: Record<string, string | number | boolean> = {
+  const requestParams: RequestParams = {
     key: apiKey,
     format: "json",
+    ...params,
   };
-  for (const [k, v] of Object.entries(params)) {
-    if (v !== undefined) cleanParams[k] = v;
-  }
+  return request<T>(
+    STEAM_API_BASE_URL,
+    interfacePath,
+    requestParams,
+    "steam-authenticated",
+    { format: "json", ...params }
+  );
+}
 
-  try {
-    const response = await axios.get(`${STEAM_API_BASE_URL}/${interfacePath}`, {
-      params: cleanParams,
-      timeout: 15000,
-      httpsAgent,
-    });
-    return response.data as T;
-  } catch (error) {
-    throw new Error(formatSteamError(error));
-  }
+/** Llama a un endpoint público de Steam que no requiere API key. */
+export async function steamPublicRequest<T>(
+  interfacePath: string,
+  params: RequestParams
+): Promise<T> {
+  return request<T>(
+    STEAM_API_BASE_URL,
+    interfacePath,
+    { format: "json", ...params },
+    "steam-public"
+  );
 }
 
 function formatSteamError(error: unknown): string {

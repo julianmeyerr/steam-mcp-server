@@ -1,6 +1,6 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { steamRequest, steamStoreRequest } from "./steam-client.js";
+import { steamPublicRequest, steamRequest, steamStoreRequest } from "./steam-client.js";
 
 /** Convierte el resultado de una tool en el formato que espera el SDK de MCP. */
 function textResult(data: unknown) {
@@ -531,7 +531,7 @@ export function registerSteamTools(server: McpServer) {
     },
     async ({ appid }) => {
       try {
-        const data = await steamRequest<{
+        const data = await steamPublicRequest<{
           response: { result: number; player_count: number };
         }>("ISteamUserStats/GetNumberOfCurrentPlayers/v1", { appid });
         if (data.response.result !== 1) {

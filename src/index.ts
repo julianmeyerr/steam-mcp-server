@@ -6,11 +6,10 @@ import { registerSteamTools } from "./tools.js";
 
 async function main() {
   if (!process.env.STEAM_API_KEY) {
-    console.error(
-      "ERROR: falta la variable de entorno STEAM_API_KEY. Definila en tu archivo .env " +
-        "(podés generar una key en https://steamcommunity.com/dev/apikey)."
+    console.warn(
+      "ADVERTENCIA: falta STEAM_API_KEY. Las herramientas que consultan datos privados " +
+        "de Steam devolverán un error. Podés generar una key en https://steamcommunity.com/dev/apikey."
     );
-    process.exit(1);
   }
 
   // Validación opcional pero recomendada para personalización
@@ -27,7 +26,7 @@ async function main() {
 
   const server = new McpServer({
     name: "steam-mcp-server",
-    version: "1.1.4",
+    version: "1.1.5",
   });
 
   registerSteamTools(server);
