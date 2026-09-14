@@ -1,0 +1,41 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.julianmeyerr/steam-mcp-server",
+  "title": "Steam MCP Server",
+  "description": "Access Steam profiles, libraries, achievements, friends, news, and player statistics through MCP.",
+  "repository": {
+    "url": "https://github.com/julianmeyerr/steam-mcp-server",
+    "source": "github"
+  },
+  "version": "1.1.6",
+  "packages": [
+    {
+      "registryType": "npm",
+      "identifier": "@j.meyer/steam-mcp-server",
+      "version": "1.1.6",
+      "transport": {
+        "type": "stdio"
+      },
+      "environmentVariables": [
+        {
+          "name": "STEAM_API_KEY",
+          "description": "Steam Web API key for account-related tools.",
+          "isRequired": false,
+          "isSecret": true
+        },
+        {
+          "name": "MY_STEAM_ID",
+          "description": "Default SteamID64 used when a tool does not receive one.",
+          "isRequired": false,
+          "isSecret": false
+        },
+        {
+          "name": "STEAM_FAMILY_MEMBER_IDS",
+          "description": "Optional comma-separated SteamID64 values for the family library.",
+          "isRequired": false,
+          "isSecret": false
+        }
+      ]
+    }
+  ]
+}

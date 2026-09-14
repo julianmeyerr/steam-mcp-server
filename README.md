@@ -69,7 +69,7 @@ This opens a browser UI where you can list and execute the tools manually to ver
 To test the published npm package instead of the local build:
 
 ```powershell
-npx --yes "@modelcontextprotocol/inspector" npx --yes --package "@j.meyer/steam-mcp-server@1.1.5" steam-mcp-server
+npx --yes "@modelcontextprotocol/inspector" npx --yes --package "@j.meyer/steam-mcp-server@1.1.6" steam-mcp-server
 ```
 
 ## 4. Connect to Claude Desktop
@@ -90,7 +90,7 @@ Add the server using the absolute path to your project:
       "args": [
         "--yes",
         "--package",
-        "@j.meyer/steam-mcp-server@1.1.5",
+        "@j.meyer/steam-mcp-server@1.1.6",
         "steam-mcp-server"
       ],
       "env": {
@@ -106,7 +106,7 @@ Restart Claude Desktop. The `steam` server should appear in the tools menu.
 ## 5. Connect to Claude Code
 
 ```bash
-claude mcp add steam -- npx --yes --package @j.meyer/steam-mcp-server@1.1.5 steam-mcp-server
+claude mcp add steam -- npx --yes --package @j.meyer/steam-mcp-server@1.1.6 steam-mcp-server
 ```
 
 Claude Code inherits `STEAM_API_KEY` if it is defined in your `.env` file or in the shell environment where you run `claude`.
@@ -129,7 +129,7 @@ The package is available as `@j.meyer/steam-mcp-server`.
 
 ### Automated releases
 
-Pushing a tag matching `vX.Y.Z` runs `.github/workflows/publish.yml`. The workflow verifies that the tag matches the version in `package.json`, runs the build, tests, audit, and package verification, then publishes to npm and creates the GitHub release.
+Pushing a tag matching `vX.Y.Z` runs `.github/workflows/publish.yml`. The workflow verifies that the tag matches the versions in `package.json` and `server.json`, runs the build, tests, audit, and package verification, then publishes to npm, the official MCP Registry, and GitHub Releases.
 
 The workflow uses npm Trusted Publishing with GitHub OIDC, so no `NPM_TOKEN` secret is required. Before the first automated release, configure a Trusted Publisher in the npm package settings with:
 
@@ -139,10 +139,12 @@ The workflow uses npm Trusted Publishing with GitHub OIDC, so no `NPM_TOKEN` sec
 - Workflow: `publish.yml`
 - Allowed action: `npm publish`
 
+The MCP Registry publication uses GitHub OIDC as well and requires no additional secret. The registry metadata is defined in `server.json` and ownership is verified through `mcpName` in `package.json`.
+
 After merging the version bump into `main`, push its matching tag:
 
 ```bash
-git push origin v1.1.5
+git push origin v1.1.6
 ```
 
 ## License
