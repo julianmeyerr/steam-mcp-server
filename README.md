@@ -124,6 +124,24 @@ npm run inspector
 If you publish it as an npm package, `npm publish` builds the project automatically and only distributes `dist`, `README.md`, `.env.example`, and `LICENSE`.
 The package is available as `@j.meyer/steam-mcp-server`.
 
+### Automated releases
+
+Pushing a tag matching `vX.Y.Z` runs `.github/workflows/publish.yml`. The workflow verifies that the tag matches the version in `package.json`, runs the build, tests, audit, and package verification, then publishes to npm and creates the GitHub release.
+
+The workflow uses npm Trusted Publishing with GitHub OIDC, so no `NPM_TOKEN` secret is required. Before the first automated release, configure a Trusted Publisher in the npm package settings with:
+
+- Provider: GitHub Actions
+- User: `julianmeyerr`
+- Repository: `steam-mcp-server`
+- Workflow: `publish.yml`
+- Allowed action: `npm publish`
+
+After merging the version bump into `main`, push its matching tag:
+
+```bash
+git push origin v1.1.4
+```
+
 ## License
 
 This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
